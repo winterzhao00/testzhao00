@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+  <script src="components/loader.js"></script>
+  <script src="lib/angular/angular.min.js"></script>
+  <script src="lib/onsenui/js/onsenui.min.js"></script>
+  <script src="lib/onsenui/js/angular-onsenui.min.js"></script>
+
+  <link rel="stylesheet" href="components/loader.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script>
+    ons.bootstrap()
+      .controller('AppController', function() {
+        this.pushes = 0;
+        this.pops = 0;
+      });
+    ons.ready(function() {
+        console.log("Onsen UI is ready!");
+    });
+  </script>
+</head>
+<body>
+  <ons-navigator
+    var="navi"
+    page="page.html"
+    ng-controller="AppController as app"
+    ons-postpush="app.pushes = app.pushes + 1"
+    ons-postpop="app.pops = app.pops + 1">
+  </ons-navigator>
+
+  <ons-template id="page.html">
+    <ons-page>
+      <ons-toolbar>
+        <div class="left">
+          <ons-back-button>Back</ons-back-button>
+        </div>
+        <div class="center">基本情報</div>
+      </ons-toolbar>
+
+      <section style="padding: 10px">
+        <ons-button ng-click="navi.pushPage('index.html')">
+          back
+        </ons-button>
+        <ons-button ng-click="navi.pushPage('informat_display.html')">
+          save
+        </ons-button>
+
+    </ons-page>
+  </ons-template>       
+
+
+  <div><a href="login.html">login</a></div>
+
+  <br>         
+        性別:
+  <select>
+  <option value="man">男</option>
+  <option value="woman">女</option>
+</select>
+<br>
+  生年月日： 
+  <input  type="date" size = "10"  name="user_birthday" /><br>
+ 身長： 
+ <input  type="text"  size = "5" name="user_date"   />cm
+<br>
+ 体重： 
+ <input  type="text"   size = "5" name="user_date"   />kg
+<br>
+趣味：    
+ <select>
+  <option value="v1"></option>
+  <option value="v1">水泳</option>
+  <option value="v2">テニス
+  </option>
+</select>
+<br>
+住所： <input  type="text"   size = "20" name="user_date"   />
+<a href="javascript:getPlacesLocation();" class="btn ps-cs6">探し</a>
+	<br >
+    This is a template for Monaca app.
+
+    <img id="photo" height="400">
+    <button id="shoot-button" onclick="shoot()">写真を撮る</button>    
+
+<script>
+    function shoot(){
+        var option = {
+            saveToPhotoAlbum: true //撮影後端末に保存
+        };
+        
+        //カメラを起動
+        navigator.camera.getPicture(onSuccess, onError, option);
+        
+        //成功時に呼び出されるコールバック関数
+        function onSuccess(imageURI){
+            document.querySelector("#photo").src = imageURI;
+        }
+        
+        //失敗時に呼び出されるコールバック関数
+        function onError(message){
+            alert("Error:" + message);
+        }
+    }
+</script>
+
+
+
+<script src=
+"https://maps.googleapis.com/maps/api/js?key=Your_API_Key&libraries=places">
+
+var Map;
+var Infowindow;
+var Latitude = undefined;
+var Longitude = undefined;
+
+// Get geo coordinates
+
+function getPlacesLocation() {
+    navigator.geolocation.getCurrentPosition
+    (onPlacesSuccess, onPlacesError, { enableHighAccuracy: true });
+}
+
+// Success callback for get geo coordinates
+
+var onPlacesSuccess = function (position) {
+
+    Latitude = position.coords.latitude;
+    Longitude = position.coords.longitude;
+
+    getPlaces(Latitude, Longitude);
+
+}
+
+// Get places by using coordinates
+
+function getPlaces(latitude, longitude) {
+
+    var latLong = new google.maps.LatLng(latitude, longitude);
+
+    var mapOptions = {
+
+        center: new google.maps.LatLng(latitude, longitude),
+        zoom: 15,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+
+    };
+
+    Map = new google.maps.Map(document.getElementById("places"), mapOptions);
+
+    Infowindow = new google.maps.InfoWindow();
+
+    var service = new google.maps.places.PlacesService(Map);
+    service.nearbySearch({
+
+        location: latLong,
+        radius: 500,
+        type: ['store']
+    }, foundStoresCallback);
+
+}
+
+// Success callback for watching your changing position
+
+var onPlacesWatchSuccess = function (position) {
+
+    var updatedLatitude = position.coords.latitude;
+    var updatedLongitude = position.coords.longitude;
+
+    if (updatedLatitude != Latitude && updatedLongitude != Longitude) {
+
+        Latitude = updatedLatitude;
+        Longitude = updatedLongitude;
+
+        getPlaces(updatedLatitude, updatedLongitude);
+    }
+}
+
+// Success callback for locating stores in the area
+
+function foundStoresCallback(results, status) {
+
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+
+        for (var i = 0; i < results.length; i++) {
+
+            createMarker(results[i]);
+
+        }
+    }
+}
+
+// Place a pin for each store on the map
+
+function createMarker(place) {
+
+    var placeLoc = place.geometry.location;
+
+    var marker = new google.maps.Marker({
+        map: Map,
+        position: place.geometry.location
+    });
+
+    google.maps.event.addListener(marker, 'click', function () {
+
+        Infowindow.setContent(place.name);
+        Infowindow.open(Map, this);
+
+    });
+}
+
+// Error callback
+
+function onPlacesError(error) {
+    console.log('code: ' + error.code + '\n' +
+        'message: ' + error.message + '\n');
+}
+
+// Watch your changing position
+
+function watchPlacesPosition() {
+
+    return navigator.geolocation.watchPosition
+    (onPlacesWatchSuccess, onPlacesError, { enableHighAccuracy: true });
+}
+
+</script>
+
+
+
+
+</body>
+</html>
